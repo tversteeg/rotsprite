@@ -12,4 +12,9 @@ keywords = ["game", "sprite", "blit", "rotation"]
 categories = ["rendering", "game-engines"]
 
 [dependencies]
-anyhow = "0.1"
+anyhow = "1.0.26"
+
+[dev-dependencies]
+blit = "0.5.7"
+image = "0.22.4"
+minifb = "0.15.3"
