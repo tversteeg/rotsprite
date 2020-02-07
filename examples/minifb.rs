@@ -4,10 +4,10 @@ use minifb::*;
 const WIDTH: usize = 250;
 const HEIGHT: usize = 250;
 
-const MASK_COLOR: u32 = 0xFF00FF;
+const MASK_COLOR: u32 = 0xFF_00_FF;
 
 fn main() {
-    let mut buffer: Vec<u32> = vec![0x00FFFFFF; WIDTH * HEIGHT];
+    let mut buffer: Vec<u32> = vec![0xFF_FF_FF; WIDTH * HEIGHT];
 
     let options = WindowOptions {
         scale: Scale::X2,

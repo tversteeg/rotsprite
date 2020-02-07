@@ -12,15 +12,35 @@ pub enum Error {
 
 // Convert a single pixel to an upscaled 2x2 block
 #[inline(always)]
-fn calculate_scale2x_block<P>(p: &P, a: &P, b: &P, c: &P, d: &P) -> (P, P, P, P)
+fn calculate_scale2x_block<P>(center: &P, up: &P, left: &P, down: &P, right: &P) -> (P, P, P, P)
 where
     P: Eq + Clone,
 {
     (
-        (if c == a && c != d && a != b { a } else { p }).clone(),
-        (if a == b && a != c && b != d { b } else { p }).clone(),
-        (if d == c && d != b && c != a { c } else { p }).clone(),
-        (if b == d && b != a && d != c { d } else { p }).clone(),
+        (if down == up && down != right && up != left {
+            up
+        } else {
+            center
+        })
+        .clone(),
+        (if up == left && up != down && left != right {
+            left
+        } else {
+            center
+        })
+        .clone(),
+        (if right == down && right != left && down != up {
+            down
+        } else {
+            center
+        })
+        .clone(),
+        (if left == right && left != up && right != down {
+            right
+        } else {
+            center
+        })
+        .clone(),
     )
 }
 
