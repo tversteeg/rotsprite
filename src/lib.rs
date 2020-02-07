@@ -26,17 +26,18 @@ where
 
 // Apply the block on the buffer
 #[inline(always)]
-fn apply_scale2x_block<P>(scaled: &mut [P], pos: usize, width: usize, pixels: (P, P, P, P))
+fn apply_scale2x_block<P>(scaled: &mut [P], pos: usize, width: usize, pixels: (&P, &P, &P, &P, &P))
 where
     P: Eq + Clone,
 {
-    scaled[pos] = pixels.0;
-    scaled[pos + 1] = pixels.1;
-    scaled[pos + width] = pixels.2;
-    scaled[pos + width + 1] = pixels.3;
+    let block_pixels = calculate_scale2x_block(pixels.0, pixels.1, pixels.2, pixels.3, pixels.4);
+    scaled[pos] = block_pixels.0;
+    scaled[pos + 1] = block_pixels.1;
+    scaled[pos + width] = block_pixels.2;
+    scaled[pos + width + 1] = block_pixels.3;
 }
 
-// Upscale the image using the scale2x algorithm
+// Algorithm for fast upscaling of pixel art sprites
 fn scale2x<P>(buf: &[P], width: usize, height: usize) -> Vec<P>
 where
     P: Eq + Clone,
@@ -53,19 +54,23 @@ where
 
         for x in 1..width - 1 {
             let pos = y_this + x;
-            let p = calculate_scale2x_block(
-                // Center
-                &buf[pos],
-                // Up
-                &buf[pos - width],
-                // Left
-                &buf[pos - 1],
-                // Down
-                &buf[pos + width],
-                // Right
-                &buf[pos + 1],
+            apply_scale2x_block(
+                &mut scaled,
+                scaled_y + x * 2,
+                width2,
+                (
+                    // Center
+                    &buf[pos],
+                    // Up
+                    &buf[pos - width],
+                    // Left
+                    &buf[pos - 1],
+                    // Down
+                    &buf[pos + width],
+                    // Right
+                    &buf[pos + 1],
+                ),
             );
-            apply_scale2x_block(&mut scaled, scaled_y + x * 2, width2, p);
         }
 
         let y_prev = y_this - width;
@@ -73,65 +78,92 @@ where
 
         // Left most column
         let p = &buf[y_this];
-        let p = calculate_scale2x_block(p, &buf[y_prev], p, &buf[y_next], &buf[y_this + 1]);
-        apply_scale2x_block(&mut scaled, scaled_y, width2, p);
+        apply_scale2x_block(
+            &mut scaled,
+            scaled_y,
+            width2,
+            (p, &buf[y_prev], p, &buf[y_next], &buf[y_this + 1]),
+        );
 
         // Right most column
         let p = &buf[y_next - 1];
-        let p = calculate_scale2x_block(
-            p,
-            &buf[y_this - 1],
-            &buf[y_next - 2],
-            &buf[y_next + width - 1],
-            p,
+        apply_scale2x_block(
+            &mut scaled,
+            scaled_y + width2 - 2,
+            width2,
+            (
+                p,
+                &buf[y_this - 1],
+                &buf[y_next - 2],
+                &buf[y_next + width - 1],
+                p,
+            ),
         );
-        apply_scale2x_block(&mut scaled, scaled_y + width2 - 2, width2, p);
     }
 
     for x in 1..width - 1 {
         // Apply the algorithm to the first row
         let p = &buf[x];
-        let p = calculate_scale2x_block(p, p, &buf[x - 1], &buf[x + width], &buf[x + 1]);
-        apply_scale2x_block(&mut scaled, x * 2, width2, p);
+        apply_scale2x_block(
+            &mut scaled,
+            x * 2,
+            width2,
+            (p, p, &buf[x - 1], &buf[x + width], &buf[x + 1]),
+        );
 
         // Apply the algorithm to the last row
         let pos = (height - 1) * width + x;
         let p = &buf[pos];
-        let p = calculate_scale2x_block(p, &buf[pos - width], &buf[pos - 1], p, &buf[pos + 1]);
         let scaled_y_this = ((height - 1) * 2) * width2;
-        apply_scale2x_block(&mut scaled, scaled_y_this + x * 2, width2, p);
+        apply_scale2x_block(
+            &mut scaled,
+            scaled_y_this + x * 2,
+            width2,
+            (p, &buf[pos - width], &buf[pos - 1], p, &buf[pos + 1]),
+        );
     }
 
     // Apply the algorithms to the corners
 
     // Top left corner
     let p = &buf[0];
-    let p = calculate_scale2x_block(p, p, p, &buf[width], &buf[1]);
-    apply_scale2x_block(&mut scaled, 0, width2, p);
+    apply_scale2x_block(&mut scaled, 0, width2, (p, p, p, &buf[width], &buf[1]));
 
     // Top right corner
     let x_right = width - 1;
     let p = &buf[x_right];
-    let p = calculate_scale2x_block(p, p, &buf[x_right - 1], &buf[x_right + width], p);
-    apply_scale2x_block(&mut scaled, width2 - 2, width2, p);
+    apply_scale2x_block(
+        &mut scaled,
+        width2 - 2,
+        width2,
+        (p, p, &buf[x_right - 1], &buf[x_right + width], p),
+    );
 
     // Bottom left corner
     let y_bottom = (height - 1) * width;
     let p = &buf[y_bottom];
-    let p = calculate_scale2x_block(p, &buf[y_bottom - width], p, p, &buf[y_bottom + 1]);
-    apply_scale2x_block(&mut scaled, (height2 - 2) * width2, width2, p);
+    apply_scale2x_block(
+        &mut scaled,
+        (height2 - 2) * width2,
+        width2,
+        (p, &buf[y_bottom - width], p, p, &buf[y_bottom + 1]),
+    );
 
     // Bottom right corner
     let y_bottom_right = y_bottom + x_right;
     let p = &buf[y_bottom_right];
-    let p = calculate_scale2x_block(
-        p,
-        &buf[y_bottom_right - width],
-        &buf[y_bottom_right - 1],
-        p,
-        p,
+    apply_scale2x_block(
+        &mut scaled,
+        (height2 - 2) * width2 + width2 - 2,
+        width2,
+        (
+            p,
+            &buf[y_bottom_right - width],
+            &buf[y_bottom_right - 1],
+            p,
+            p,
+        ),
     );
-    apply_scale2x_block(&mut scaled, (height2 - 2) * width2 + width2 - 2, width2, p);
 
     scaled
 }
@@ -154,6 +186,8 @@ where
         return Err(Error::ImageSizeMismatch);
     }
     let height = len / width;
+
+    // Upscale the image using the scale2x algorithm
 
     // 2x
     let scaled = scale2x(buf, width, height);
