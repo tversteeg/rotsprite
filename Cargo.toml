@@ -13,8 +13,9 @@ categories = ["rendering", "game-engines"]
 
 [dependencies]
 anyhow = "1.0.26"
+thiserror = "1.0.10"
 
 [dev-dependencies]
 blit = "0.5.7"
-image = "0.22.4"
+image = "0.22.5"
 minifb = "0.15.3"
