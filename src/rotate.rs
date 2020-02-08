@@ -1,7 +1,5 @@
 use std::f64;
 
-const FLOAT_ROUNDING_ERR: f64 = 0.0001;
-
 // Algorithm for rotating the image
 pub(crate) fn rotate<P>(
     buf: &[P],
@@ -21,11 +19,11 @@ where
     if rotation % 90.0 == 0.0 {
         let (width, height, downscaled) = downscale(buf, width, height, down_scale_factor);
 
-        return if rotation == 90.0 {
+        return if (rotation - 90.0).abs() < f64::EPSILON {
             rotate90(&downscaled, width, height)
-        } else if rotation == 180.0 {
+        } else if (rotation - 180.0).abs() < f64::EPSILON {
             rotate180(&downscaled, width, height)
-        } else if rotation == 270.0 {
+        } else if (rotation - 270.0).abs() < f64::EPSILON {
             rotate270(&downscaled, width, height)
         } else {
             (width, height, downscaled.to_vec())
@@ -61,10 +59,10 @@ where
     ];
 
     // Get the min and max values of all the coordinates
-    let min_x = x_coords.iter().cloned().fold(f64::INFINITY, f64::min) + FLOAT_ROUNDING_ERR;
-    let max_x = x_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - FLOAT_ROUNDING_ERR;
-    let min_y = y_coords.iter().cloned().fold(f64::INFINITY, f64::min) + FLOAT_ROUNDING_ERR;
-    let max_y = y_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - FLOAT_ROUNDING_ERR;
+    let min_x = x_coords.iter().cloned().fold(f64::INFINITY, f64::min) + f64::EPSILON;
+    let max_x = x_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - f64::EPSILON;
+    let min_y = y_coords.iter().cloned().fold(f64::INFINITY, f64::min) + f64::EPSILON;
+    let max_y = y_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - f64::EPSILON;
 
     let result_width = (max_x - min_x).abs().ceil();
     let result_height = (max_y - min_y).abs().ceil();
