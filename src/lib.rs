@@ -47,13 +47,7 @@ where
     let scaled = scale2x::scale2x(&scaled, width, height);
 
     // Rotate the image
-    let rotated = rotate::rotate(
-        &scaled,
-        empty_color,
-        width as f64,
-        height as f64,
-        rotation % 360.0,
-    );
+    let rotated = rotate::rotate(&scaled, empty_color, width, height, rotation);
 
     Ok(rotated)
 }
