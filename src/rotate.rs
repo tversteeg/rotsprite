@@ -9,30 +9,42 @@ pub(crate) fn rotate<P>(
     width: usize,
     height: usize,
     rotation: f64,
+    down_scale_factor: usize,
 ) -> (usize, usize, Vec<P>)
 where
     P: Clone,
 {
-    let rotation = rotation % 360.0;
+    // Always keep the rotation in the 0.0-360.0 range
+    let rotation = rotation.rem_euclid(360.0);
 
-    // TODO other rotation degrees
-    if rotation == 90.0 {
-        return rotate90(buf, width, height);
-    } else if rotation == 180.0 {
-        return rotate180(buf, width, height);
-    } else if rotation == 270.0 {
-        return rotate90(&rotate180(buf, width, height).2, width, height);
+    // If rotation is any of 0.0, 90.0, 180.0 or 270.0 we can do a much faster calculation
+    if rotation % 90.0 == 0.0 {
+        let (width, height, downscaled) = downscale(buf, width, height, down_scale_factor);
+
+        return if rotation == 90.0 {
+            rotate90(&downscaled, width, height)
+        } else if rotation == 180.0 {
+            rotate180(&downscaled, width, height)
+        } else if rotation == 270.0 {
+            rotate270(&downscaled, width, height)
+        } else {
+            (width, height, downscaled.to_vec())
+        };
     }
+
+    // The downscaled size
+    let new_width = width as f64 / down_scale_factor as f64;
+    let new_height = height as f64 / down_scale_factor as f64;
 
     let radians = rotation * f64::consts::PI / 180.0;
     let sin_angle = (radians).sin();
     let cos_angle = (radians).cos();
 
     // First calculate the new size
-    let half_width = width as f64 / 2.0;
+    let half_width = new_width / 2.0;
     let half_width_cos = half_width * cos_angle;
     let half_width_sin = half_width * sin_angle;
-    let half_height = height as f64 / 2.0;
+    let half_height = new_height / 2.0;
     let half_height_sin = half_height * sin_angle;
     let half_height_cos = half_height * cos_angle;
     let x_coords = [
@@ -54,12 +66,53 @@ where
     let min_y = y_coords.iter().cloned().fold(f64::INFINITY, f64::min) + FLOAT_ROUNDING_ERR;
     let max_y = y_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - FLOAT_ROUNDING_ERR;
 
-    let new_width = (max_x - min_x).abs().ceil() as usize;
-    let new_height = (max_y - min_y).abs().ceil() as usize;
+    let result_width = (max_x - min_x).abs().ceil();
+    let result_height = (max_y - min_y).abs().ceil();
 
-    let mut rotated = vec![empty_color.clone(); new_width * new_height];
+    let center_x = new_width / 2.0;
+    let center_y = new_height / 2.0;
 
-    (new_width, new_height, rotated)
+    let result_center_x = result_width / 2.0;
+    let result_center_y = result_height / 2.0;
+
+    let result_width = result_width as usize;
+    let result_height = result_height as usize;
+
+    let widthf64 = width as f64;
+    let heightf64 = height as f64;
+    let down_scale_factorf64 = down_scale_factor as f64;
+
+    // Create the downscaled and rotated result buffer
+    let mut rotated = vec![empty_color.clone(); result_width * result_height];
+    for y in 0..result_height {
+        let yf64 = y as f64;
+
+        let center_offset_y = yf64 - result_center_y;
+
+        for x in 0..result_width {
+            let xf64 = x as f64;
+
+            let center_offset_x = xf64 - result_center_x;
+
+            // Calculate the rotation of where we need to look for the pixel
+            let dir = f64::atan2(center_offset_y, center_offset_x) - radians;
+            // Calculate the distance of where we need to look
+            let mag = (center_offset_x * center_offset_x + center_offset_y * center_offset_y)
+                .sqrt()
+                * down_scale_factorf64;
+
+            let orig_x = center_x * down_scale_factorf64 + mag * dir.cos();
+            if orig_x >= 0.0 && orig_x < widthf64 {
+                let orig_y = center_y * down_scale_factorf64 + mag * dir.sin();
+                if orig_y >= 0.0 && orig_y < heightf64 {
+                    rotated[y * result_width + x] =
+                        buf[orig_y as usize * width + orig_x as usize].clone();
+                }
+            }
+        }
+    }
+
+    (result_width, result_height, rotated)
 }
 
 fn rotate90<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
@@ -99,6 +152,42 @@ where
     (width, height, rotated)
 }
 
+fn rotate270<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
+where
+    P: Clone,
+{
+    // 1, 2, 3
+    // 4, 5, 6
+    // ->
+    // 3, 6
+    // 2, 5
+    // 1, 2
+
+    let (width, height, rotated) = rotate90(buf, width, height);
+
+    return rotate180(&rotated, width, height);
+}
+
+fn downscale<P>(buf: &[P], width: usize, height: usize, factor: usize) -> (usize, usize, Vec<P>)
+where
+    P: Clone,
+{
+    let new_width = width / factor;
+    let new_height = height / factor;
+
+    let mut scaled = vec![buf[0].clone(); new_width * new_height];
+
+    for y in 0..new_height {
+        let y_row = y * new_width;
+        let y_row_scaled = y * factor * width;
+        for x in 0..new_width {
+            scaled[y_row + x] = buf[y_row_scaled + x * factor].clone();
+        }
+    }
+
+    (new_width, new_height, scaled)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,7 +210,7 @@ mod tests {
 
     #[test]
     fn rotation_270_deg() {
-        let (w, h, new) = rotate(&[1, 2, 3, 4, 5, 6], &0, 3, 2, 270.0);
+        let (w, h, new) = rotate270(&[1, 2, 3, 4, 5, 6], 3, 2);
         assert_eq!(w, 2);
         assert_eq!(h, 3);
         assert_eq!(new, [3, 6, 2, 5, 1, 4]);
