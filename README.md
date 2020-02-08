@@ -13,7 +13,7 @@ Works with many types of pixel buffers.
 
 Before rotation:
 
-![Example](example/king-by-buch.png?raw=true)
+![Example](examples/king-by-buch.png?raw=true)
 
 After rotation:
 
