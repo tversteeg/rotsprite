@@ -13,11 +13,11 @@ Works with many types of pixel buffers.
 
 Before rotation:
 
-![Example](examples/king-by-buch.png?raw=true)
+![Example](docs/example-before.png?raw=true)
 
 After rotation:
 
-![Example](docs/example1.png?raw=true)
+![Example](docs/example-after.png?raw=true)
 
 ### Run the example
 
