@@ -11,7 +11,7 @@ pub(crate) fn rotate<P>(
     rotation: f64,
 ) -> (usize, usize, Vec<P>)
 where
-    P: Eq + Clone,
+    P: Clone,
 {
     let rotation = rotation % 360.0;
 
@@ -19,7 +19,9 @@ where
     if rotation == 90.0 {
         return rotate90(buf, width, height);
     } else if rotation == 180.0 {
+        return rotate180(buf, width, height);
     } else if rotation == 270.0 {
+        return rotate90(&rotate180(buf, width, height).2, width, height);
     }
 
     let radians = rotation * f64::consts::PI / 180.0;
@@ -62,7 +64,7 @@ where
 
 fn rotate90<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
 where
-    P: Eq + Clone,
+    P: Clone,
 {
     // 1, 2, 3
     // 4, 5, 6
@@ -81,6 +83,22 @@ where
     (height, width, rotated)
 }
 
+fn rotate180<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
+where
+    P: Clone,
+{
+    // 1, 2, 3
+    // 4, 5, 6
+    // ->
+    // 6, 5, 4
+    // 3, 2, 1
+
+    let mut rotated = buf.to_vec();
+    rotated.reverse();
+
+    (width, height, rotated)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -91,5 +109,21 @@ mod tests {
         assert_eq!(w, 2);
         assert_eq!(h, 3);
         assert_eq!(new, [4, 1, 5, 2, 6, 3]);
+    }
+
+    #[test]
+    fn rotation_180_deg() {
+        let (w, h, new) = rotate180(&[1, 2, 3, 4, 5, 6], 3, 2);
+        assert_eq!(w, 3);
+        assert_eq!(h, 2);
+        assert_eq!(new, [6, 5, 4, 3, 2, 1]);
+    }
+
+    #[test]
+    fn rotation_270_deg() {
+        let (w, h, new) = rotate(&[1, 2, 3, 4, 5, 6], &0, 3, 2, 270.0);
+        assert_eq!(w, 2);
+        assert_eq!(h, 3);
+        assert_eq!(new, [3, 6, 2, 5, 1, 4]);
     }
 }
