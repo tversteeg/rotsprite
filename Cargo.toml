@@ -12,7 +12,6 @@ keywords = ["game", "sprite", "blit", "rotation"]
 categories = ["rendering", "game-engines"]
 
 [dependencies]
-anyhow = "1.0.26"
 thiserror = "1.0.10"
 
 [dev-dependencies]
