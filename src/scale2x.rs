@@ -1,5 +1,5 @@
 // Algorithm for fast upscaling of pixel art sprites
-pub(crate) fn scale2x<P>(buf: &[P], width: usize, height: usize) -> Vec<P>
+pub(crate) fn scale2x<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
 where
     P: Eq + Clone,
 {
@@ -126,7 +126,7 @@ where
         ),
     );
 
-    scaled
+    (width2, height2, scaled)
 }
 
 // Apply the block on the buffer
@@ -183,11 +183,13 @@ mod tests {
     #[test]
     fn scale2x_test() {
         let buf = [1, 2, 3, 4];
-        let new = scale2x(&buf, 2, 2);
+        let (w, h, new) = scale2x(&buf, 2, 2);
+        assert_eq!(w, 4);
+        assert_eq!(h, 4);
         assert_eq!(new, [1, 1, 2, 2, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 4, 4]);
 
         let buf = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let new = scale2x(&buf, 3, 3);
+        let (_, _, new) = scale2x(&buf, 3, 3);
         let mut cmp = Vec::<usize>::new();
         cmp.extend([1, 1, 2, 2, 3, 3].iter());
         cmp.extend([1, 1, 2, 2, 3, 3].iter());
@@ -198,7 +200,7 @@ mod tests {
         assert_eq!(new, cmp);
 
         let buf = [1, 2, 3, 4, 5, 6];
-        let new = scale2x(&buf, 3, 2);
+        let (_, _, new) = scale2x(&buf, 3, 2);
         assert_eq!(
             new,
             [1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 4, 4, 5, 5, 6, 6]

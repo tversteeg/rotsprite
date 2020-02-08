@@ -47,10 +47,10 @@ where
     ];
 
     // Get the min and max values of all the coordinates
-    let min_x = x_coords.iter().cloned().fold(1.0f64 / 0.0f64, f64::min) + FLOAT_ROUNDING_ERR;
-    let max_x = x_coords.iter().cloned().fold(0.0f64 / 0.0f64, f64::max) - FLOAT_ROUNDING_ERR;
-    let min_y = y_coords.iter().cloned().fold(1.0f64 / 0.0f64, f64::min) + FLOAT_ROUNDING_ERR;
-    let max_y = y_coords.iter().cloned().fold(0.0f64 / 0.0f64, f64::max) - FLOAT_ROUNDING_ERR;
+    let min_x = x_coords.iter().cloned().fold(f64::INFINITY, f64::min) + FLOAT_ROUNDING_ERR;
+    let max_x = x_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - FLOAT_ROUNDING_ERR;
+    let min_y = y_coords.iter().cloned().fold(f64::INFINITY, f64::min) + FLOAT_ROUNDING_ERR;
+    let max_y = y_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - FLOAT_ROUNDING_ERR;
 
     let new_width = (max_x - min_x).abs().ceil() as usize;
     let new_height = (max_y - min_y).abs().ceil() as usize;

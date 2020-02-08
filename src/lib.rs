@@ -40,14 +40,16 @@ where
 
     // Upscale the image using the scale2x algorithm
     // 2x
-    let scaled = scale2x::scale2x(buf, width, height);
+    let (scaled_width, scaled_height, scaled) = scale2x::scale2x(buf, width, height);
     // 4x
-    let scaled = scale2x::scale2x(&scaled, width, height);
+    let (scaled_width, scaled_height, scaled) =
+        scale2x::scale2x(&scaled, scaled_width, scaled_height);
     // 8x
-    let scaled = scale2x::scale2x(&scaled, width, height);
+    let (scaled_width, scaled_height, scaled) =
+        scale2x::scale2x(&scaled, scaled_width, scaled_height);
 
     // Rotate the image
-    let rotated = rotate::rotate(&scaled, empty_color, width, height, rotation);
+    let rotated = rotate::rotate(&scaled, empty_color, scaled_width, scaled_height, rotation);
 
     Ok(rotated)
 }
