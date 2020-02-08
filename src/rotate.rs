@@ -165,7 +165,7 @@ where
 
     let (width, height, rotated) = rotate90(buf, width, height);
 
-    return rotate180(&rotated, width, height);
+    rotate180(&rotated, width, height)
 }
 
 fn downscale<P>(buf: &[P], width: usize, height: usize, factor: usize) -> (usize, usize, Vec<P>)
