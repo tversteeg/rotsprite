@@ -13,7 +13,7 @@ Works with many types of pixel buffers.
 
 Before rotation:
 
-![Example](example/king-by-buck.png?raw=true)
+![Example](example/king-by-buch.png?raw=true)
 
 After rotation:
 
@@ -26,3 +26,8 @@ On Linux you need the `xorg-dev` package as required by minifb. `sudo apt instal
 ```sh
 cargo run --example minifb
 ```
+
+## Credits
+
+RotSprite algorithm - Xenowhirl<br/>
+Example image - Buch
