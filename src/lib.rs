@@ -2,8 +2,11 @@
 //!
 //! This library allows you to rotate pixel art using the [rotsprite](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite) algorithm.
 
-mod rotate;
-mod scale2x;
+// Make the modules public for benchmarks but don't document it
+#[doc(hidden)]
+pub mod rotate;
+#[doc(hidden)]
+pub mod scale2x;
 
 use thiserror::Error;
 

@@ -1,5 +1,5 @@
 // Algorithm for fast upscaling of pixel art sprites
-pub(crate) fn scale2x<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
+pub fn scale2x<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
 where
     P: Eq + Clone,
 {

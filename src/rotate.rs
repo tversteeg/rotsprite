@@ -1,7 +1,7 @@
 use std::f64;
 
 // Algorithm for rotating the image
-pub(crate) fn rotate<P>(
+pub fn rotate<P>(
     buf: &[P],
     empty_color: &P,
     width: usize,
@@ -113,7 +113,7 @@ where
     (result_width, result_height, rotated)
 }
 
-fn rotate90<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
+pub fn rotate90<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
 where
     P: Clone,
 {
@@ -134,7 +134,7 @@ where
     (height, width, rotated)
 }
 
-fn rotate180<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
+pub fn rotate180<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
 where
     P: Clone,
 {
@@ -150,7 +150,7 @@ where
     (width, height, rotated)
 }
 
-fn rotate270<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
+pub fn rotate270<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
 where
     P: Clone,
 {
@@ -166,7 +166,7 @@ where
     rotate180(&rotated, width, height)
 }
 
-fn downscale<P>(buf: &[P], width: usize, height: usize, factor: usize) -> (usize, usize, Vec<P>)
+pub fn downscale<P>(buf: &[P], width: usize, height: usize, factor: usize) -> (usize, usize, Vec<P>)
 where
     P: Clone,
 {
