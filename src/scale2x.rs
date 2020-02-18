@@ -149,25 +149,25 @@ where
     P: Eq + Clone,
 {
     (
-        (if left == up && left != right && up != right {
+        (if left == up && left != down && up != right {
             up
         } else {
             center
         })
         .clone(),
-        (if up == right && up != left && right != right {
+        (if up == right && up != left && right != down {
             right
         } else {
             center
         })
         .clone(),
-        (if right == left && right != right && left != up {
+        (if down == left && down != right && left != up {
             left
         } else {
             center
         })
         .clone(),
-        (if right == down && right != up && right != left {
+        (if right == down && right != up && down != left {
             down
         } else {
             center
