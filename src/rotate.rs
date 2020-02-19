@@ -30,87 +30,77 @@ where
         };
     }
 
-    // The downscaled size
-    let new_width = width as f64 / down_scale_factor as f64;
-    let new_height = height as f64 / down_scale_factor as f64;
+    let fwidth = width as f64;
+    let fheight = height as f64;
 
-    let radians = rotation * f64::consts::PI / 180.0;
-    let sin_angle = (radians).sin();
-    let cos_angle = (radians).cos();
+    let radians = rotation.to_radians();
+    let sin = radians.sin();
+    let cos = radians.cos();
 
-    // First calculate the new size
-    let half_width = new_width / 2.0;
-    let half_width_cos = half_width * cos_angle;
-    let half_width_sin = half_width * sin_angle;
-    let half_height = new_height / 2.0;
-    let half_height_sin = half_height * sin_angle;
-    let half_height_cos = half_height * cos_angle;
-    let x_coords = [
-        half_width_cos + half_height_sin,
-        -half_width_cos + half_height_sin,
-        -half_width_cos - half_height_sin,
-        half_width_cos - half_height_sin,
-    ];
-    let y_coords = [
-        half_width_sin + half_height_cos,
-        -half_width_sin + half_height_cos,
-        -half_width_sin - half_height_cos,
-        half_width_sin - half_height_cos,
-    ];
+    let p1 = (-fheight * sin, fheight * cos);
+    let p2 = (fwidth * cos - fheight * sin, fheight * cos + fwidth * sin);
+    let p3 = (fwidth * cos, fwidth * sin);
 
-    // Get the min and max values of all the coordinates
-    let min_x = x_coords.iter().cloned().fold(f64::INFINITY, f64::min) + f64::EPSILON;
-    let max_x = x_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - f64::EPSILON;
-    let min_y = y_coords.iter().cloned().fold(f64::INFINITY, f64::min) + f64::EPSILON;
-    let max_y = y_coords.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - f64::EPSILON;
+    let min_x = [p1.0, p2.0, p3.0].iter().cloned().fold(0.0, f64::min);
+    let min_y = [p1.1, p2.1, p3.1].iter().cloned().fold(0.0, f64::min);
+    let max_x = if rotation > 90.0 && rotation < 180.0 {
+        0.0
+    } else {
+        [p1.0, p2.0, p3.0]
+            .iter()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max)
+    };
+    let max_y = if rotation > 180.0 && rotation < 270.0 {
+        0.0
+    } else {
+        [p1.1, p2.1, p3.1]
+            .iter()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max)
+    };
 
-    let result_width = (max_x - min_x).abs().ceil();
-    let result_height = (max_y - min_y).abs().ceil();
+    // Rotated sizie without scaling
+    let result_width = (max_x.abs() - min_x).ceil();
+    let result_height = (max_y.abs() - min_y).ceil();
 
-    let center_x = new_width / 2.0;
-    let center_y = new_height / 2.0;
-
-    let result_center_x = result_width / 2.0;
-    let result_center_y = result_height / 2.0;
-
-    let result_width = result_width as usize;
-    let result_height = result_height as usize;
-
-    let widthf64 = width as f64;
-    let heightf64 = height as f64;
-    let down_scale_factorf64 = down_scale_factor as f64;
+    // Rotated size with scaling
+    let fscale = down_scale_factor as f64;
+    let result_buffer_width = (result_width / fscale).ceil() as usize;
+    let result_buffer_height = (result_height / fscale).ceil() as usize;
 
     // Create the downscaled and rotated result buffer
-    let mut rotated = vec![empty_color.clone(); result_width * result_height];
-    for y in 0..result_height {
-        let yf64 = y as f64;
+    let mut rotated = vec![empty_color.clone(); result_buffer_width * result_buffer_height];
 
-        let center_offset_y = yf64 - result_center_y;
+    for y in 0..result_height as usize {
+        let fy = y as f64;
 
-        for x in 0..result_width {
-            let xf64 = x as f64;
+        let y_with_min = fy + min_y;
 
-            let center_offset_x = xf64 - result_center_x;
+        let y_min_sin = y_with_min * sin;
+        let y_min_cos = y_with_min * cos;
 
-            // Calculate the rotation of where we need to look for the pixel
-            let dir = f64::atan2(center_offset_y, center_offset_x) - radians;
-            // Calculate the distance of where we need to look
-            let mag = (center_offset_x * center_offset_x + center_offset_y * center_offset_y)
-                .sqrt()
-                * down_scale_factorf64;
+        for x in 0..result_width as usize {
+            let fx = x as f64;
 
-            let orig_x = center_x * down_scale_factorf64 + mag * dir.cos();
-            if orig_x >= 0.0 && orig_x < widthf64 {
-                let orig_y = center_y * down_scale_factorf64 + mag * dir.sin();
-                if orig_y >= 0.0 && orig_y < heightf64 {
-                    rotated[y * result_width + x] =
-                        buf[orig_y as usize * width + orig_x as usize].clone();
-                }
+            let x_with_min = fx + min_x;
+
+            let x_min_sin = x_with_min * sin;
+            let x_min_cos = x_with_min * cos;
+
+            let source_x = x_min_cos + y_min_sin;
+            let source_y = y_min_cos - x_min_sin;
+
+            if source_x >= 0.0 && source_x < fwidth && source_y >= 0.0 && source_y < fheight {
+                let x_dst_pos = fx / fscale;
+                let y_dst_pos = fy / fscale;
+                rotated[y_dst_pos as usize * result_buffer_width + x_dst_pos as usize] =
+                    buf[source_y as usize * width + source_x as usize].clone();
             }
         }
     }
 
-    (result_width, result_height, rotated)
+    (result_buffer_width, result_buffer_height, rotated)
 }
 
 pub fn rotate90<P>(buf: &[P], width: usize, height: usize) -> (usize, usize, Vec<P>)
