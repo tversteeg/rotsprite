@@ -11,13 +11,12 @@ Works with many types of pixel buffers.
 
 ## Example
 
-Before rotation:
+![Small](docs/example-small.png?raw=true)
+![Large](docs/example-large.png?raw=true)
 
-![Example](docs/example-before.png?raw=true)
-
-After rotation:
-
-![Example](docs/example-after.png?raw=true)
+Left: Source Image
+Middle: Rotation using RotSprite
+Right: Naive rotation
 
 ### Run the example
 
@@ -30,4 +29,4 @@ cargo run --example minifb
 ## Credits
 
 RotSprite algorithm - Xenowhirl<br/>
-Example image - Buch
+[Pixel Art - Redshrike](https://opengameart.org/content/3-form-rpg-boss-harlequin-epicycle)
