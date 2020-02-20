@@ -23,24 +23,13 @@ fn load_image(path: &str) -> (usize, Vec<u32>) {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let (small_width, small_buf) = load_image("examples/king-by-buch.png");
+    let (small_width, small_buf) = load_image("examples/threeforms.png");
 
     c.bench_function(
-        &*format!("small king 45 degrees ({} width)", small_width),
+        &*format!("sprite 45 degrees ({} width)", small_width),
         |b| {
             b.iter(|| {
                 rotsprite(&small_buf, &small_buf[0], small_width, 45.0).unwrap();
-            });
-        },
-    );
-
-    let (large_width, large_buf) = load_image("docs/example-after.png");
-
-    c.bench_function(
-        &*format!("large king 45 degrees ({} width)", large_width),
-        |b| {
-            b.iter(|| {
-                rotsprite(&large_buf, &large_buf[0], large_width, 45.0).unwrap();
             });
         },
     );
