@@ -1,6 +1,10 @@
 use std::f64;
 
 // Algorithm for rotating the image
+#[multiversion::multiversion]
+#[clone(target = "[x86|x86_64]+sse3")]
+#[clone(target = "[x86|x86_64]+sse3+avx")]
+#[clone(target = "[x86|x86_64]+sse3+avx2")]
 pub fn rotate<P>(
     buf: &[P],
     empty_color: &P,

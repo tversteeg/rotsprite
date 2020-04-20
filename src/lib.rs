@@ -8,6 +8,7 @@ pub mod rotate;
 #[doc(hidden)]
 pub mod scale2x;
 
+use crate::{rotate::*, scale2x::*};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -21,6 +22,11 @@ pub enum Error {
 /// Rotation is in degrees (0-360).
 /// The size of the resulting vector will be bigger if the rotation isn't exactly 0.0, 90.0, 180.0 or 270.0 degrees.
 /// The width and the height will be swapped at angles of 90.0 and 270.0.
+#[multiversion::multiversion]
+#[clone(target = "[x86|x86_64]+sse3")]
+#[clone(target = "[x86|x86_64]+sse3+avx")]
+#[clone(target = "[x86|x86_64]+sse3+avx2")]
+#[static_dispatch(fn = "rotate")]
 pub fn rotsprite<P>(
     buf: &[P],
     empty_color: &P,
@@ -43,16 +49,14 @@ where
 
     // Upscale the image using the scale2x algorithm
     // 2x
-    let (scaled_width, scaled_height, scaled) = scale2x::scale2x(buf, width, height);
+    let (scaled_width, scaled_height, scaled) = scale2x(buf, width, height);
     // 4x
-    let (scaled_width, scaled_height, scaled) =
-        scale2x::scale2x(&scaled, scaled_width, scaled_height);
+    let (scaled_width, scaled_height, scaled) = scale2x(&scaled, scaled_width, scaled_height);
     // 8x
-    let (scaled_width, scaled_height, scaled) =
-        scale2x::scale2x(&scaled, scaled_width, scaled_height);
+    let (scaled_width, scaled_height, scaled) = scale2x(&scaled, scaled_width, scaled_height);
 
     // Rotate the image
-    let rotated = rotate::rotate(
+    let rotated = rotate(
         &scaled,
         empty_color,
         scaled_width,
