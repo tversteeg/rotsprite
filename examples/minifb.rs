@@ -1,6 +1,6 @@
-use blit::*;
-use image::*;
-use minifb::*;
+use blit::{BlitExt, Color};
+use image::{GenericImageView};
+use minifb::{Window, WindowOptions, Key, Scale};
 use rotsprite::rotsprite;
 
 use std::thread::sleep;
