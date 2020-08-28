@@ -10,7 +10,7 @@ fn main() {
         .expect("Could not convert image to RGBA8 array");
 
     let pixels: Vec<Rgba<u8>> = image.pixels().copied().collect();
-    let unfound_color = Rgba([255, 255, 255, 255]);
+    let unfound_color = Rgba([0, 0, 0, 0]);
     let rotation_angle: f64 = 45.0; //Rotate in increments of 15 degrees
     let (rotated_width, rotated_height, rotated) = rotsprite(
         &pixels,
