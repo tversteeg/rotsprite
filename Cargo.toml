@@ -19,7 +19,7 @@ thiserror = "1.0.15"
 blit = "0.5.12"
 image = "0.23.3"
 minifb = "0.16.0"
-criterion = "0.3.1"
+criterion = "0.4.0"
 rand = "0.7.3"
 
 [[bench]]
