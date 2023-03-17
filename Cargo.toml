@@ -18,7 +18,7 @@ thiserror = "1.0.15"
 [dev-dependencies]
 blit = "0.5.12"
 image = "0.23.3"
-minifb = "0.16.0"
+minifb = "0.24.0"
 criterion = "0.3.1"
 rand = "0.7.3"
 
