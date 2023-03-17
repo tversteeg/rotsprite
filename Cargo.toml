@@ -12,7 +12,7 @@ keywords = ["game", "sprite", "blit", "rotation"]
 categories = ["rendering", "game-engines"]
 
 [dependencies]
-multiversion = "0.5.0"
+multiversion = "0.7.1"
 thiserror = "1.0.15"
 
 [dev-dependencies]
