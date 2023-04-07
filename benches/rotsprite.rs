@@ -1,6 +1,6 @@
-use blit::*;
+use blit::BlitExt;
 use criterion::{criterion_group, criterion_main, Criterion};
-use image::*;
+use image::GenericImageView;
 use rotsprite::rotsprite;
 
 fn load_image(path: &str) -> (usize, Vec<u32>) {
@@ -10,14 +10,9 @@ fn load_image(path: &str) -> (usize, Vec<u32>) {
     let size = img.dimensions();
     // Create a new buffer for this image that can be passed to the rotate function
     let mut img_buf: Vec<u32> = vec![0xFF_FF_FF; (size.0 * size.1) as usize];
-    img.as_rgba8()
-        .expect("Could not convert image to RGBA8 array")
-        .blit(
-            &mut img_buf,
-            size.0 as usize,
-            (0, 0),
-            blit::Color::from_u32(0xFF_00_FF),
-        );
+    img.into_rgba8()
+        .to_blit_buffer_with_mask_color(0xFF_00_FF)
+        .blit(&mut img_buf, size.0 as usize, (0, 0));
 
     (size.0 as usize, img_buf)
 }

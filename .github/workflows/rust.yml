@@ -10,118 +10,112 @@ on:
       - "**.md"
 
 jobs:
-  # Run the `rustfmt` code formatter
   rustfmt:
-    name: Rustfmt [Formatter]
+    name: Formatter check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           components: rustfmt
           override: true
+
       - run: rustup component add rustfmt
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-  # Run the `clippy` linting tool
-  clippy:
-    name: Clippy [Linter]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          components: clippy
-          override: true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets --all-features -- -D clippy::all
-
-  # Run a security audit on dependencies
-  cargo_audit:
-    name: Cargo Audit [Security]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - run: cargo install --force cargo-audit
-      - run: cargo generate-lockfile
-      - uses: actions-rs/cargo@v1
-        with:
-          command: audit
-
-  # Ensure that the project could be successfully compiled
-  cargo_check:
+  # Run compile check on Linux, macOS, and Windows
+  # On both Rust stable and Rust nightly
+  compile:
     name: Compile
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        toolchain: [stable, nightly]
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --all
+      # Checkout the branch being tested
+      - uses: actions/checkout@v3
 
-  # Run tests on Linux, macOS, and Windows
+      # Install rust stable
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+
+      # Cache the built dependencies
+      - uses: Swatinem/rust-cache@v2.2.1
+        with:
+          save-if: ${{ github.event_name == 'push' }}
+
+      # Install cargo-hack
+      - uses: taiki-e/install-action@cargo-hack
+
+      # Compile all feature combinations on the target platform
+      - name: Compile
+        run: cargo hack --feature-powerset check
+
+  # Run tests on Linux
   # On both Rust stable and Rust nightly
   test:
-    name: Test Suite
-    needs: [cargo_check]
-    runs-on: ${{ matrix.os }}
+    name: Test
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        rust: [stable, nightly]
+        toolchain: [stable, nightly]
     steps:
       # Checkout the branch being tested
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
-      # Install all the required dependencies for testing
-      - uses: actions-rs/toolchain@v1
+      # Install rust stable
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          toolchain: ${{ matrix.toolchain }}
 
-      # Install Node.js at a fixed version
-      - uses: actions/setup-node@v1
+      # Cache the built dependencies
+      - uses: Swatinem/rust-cache@v2.2.1
         with:
-          node-version: "12.0"
+          save-if: ${{ github.event_name == 'push' }}
 
-      # Install Ruby at a fixed version
-      - uses: actions/setup-ruby@v1
-        with:
-          ruby-version: "2.6"
-
-      # Install Python at a fixed version
-      - uses: actions/setup-python@v1
-        with:
-          python-version: "3.7"
-
-      # Install dotnet at a fixed version
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: "2.2.402"
+      # Install cargo-hack
+      - uses: taiki-e/install-action@cargo-hack
 
       # Run the ignored tests that expect the above setup
       - name: Run all tests
-        uses: actions-rs/cargo@v1
+        run: cargo hack --feature-powerset test
+
+  wasm:
+    name: WASM examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Install rust stable
+      - uses: dtolnay/rust-toolchain@master
         with:
-          command: test
-          args: -- -Z unstable-options --include-ignored
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      # Cache the built dependencies
+      - uses: Swatinem/rust-cache@v2.2.1
+        with:
+          save-if: ${{ github.event_name == 'push' }}
+
+      # Build the WASM examples
+      - name: Build example
+        run: cargo run --package run-wasm -- --release --build-only --example window
+
+      # Deploy to GitHub pages
+      - name: Deploy to GitHub Pages
+        uses: s0/git-publish-subdir-action@master
+        env:
+          REPO: self
+          BRANCH: gh-pages
+          FOLDER: target/wasm-examples
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

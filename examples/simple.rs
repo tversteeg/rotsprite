@@ -1,4 +1,4 @@
-use image::{GenericImageView, Rgba, RgbaImage};
+use image::{Rgba, RgbaImage};
 use rotsprite::rotsprite;
 
 fn main() {

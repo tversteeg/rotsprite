@@ -9,7 +9,6 @@ Rust implementation/library of the RotSprite algorithm.
 
 Works with many types of pixel buffers.
 
-## Example
 
 ![Large](docs/example-large.png?raw=true)
 ![Small](docs/example-small.png?raw=true)
@@ -18,12 +17,20 @@ Works with many types of pixel buffers.
 |-|-|-|
 | Source Image | Rotated 30° using RotSprite | Rotated 30° using naive rotation |
 
-### Run the example
+## Example
 
-On Linux you need the `xorg-dev` package as required by minifb. `sudo apt install xorg-dev`
+## Demos
 
-```sh
-cargo run --example minifb
+### [WASM Demo](https://tversteeg.nl/rotsprite/window/)
+
+Web: https://tversteeg.nl/rotsprite/window
+
+Uses the `["blit"]` feature flag.
+
+#### Local
+
+```console
+cargo run --example window
 ```
 
 ## Credits

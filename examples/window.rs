@@ -1,14 +1,12 @@
-use blit::{BlitBuffer, BlitExt};
-use image::GenericImageView;
+use blit::BlitExt;
 use rotsprite::Rotsprite;
 use softbuffer::GraphicsContext;
+use web_time::SystemTime;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
-
-use std::time::Duration;
 
 const BACKGROUND_COLOR: u32 = 0xFF_CC_FF;
 const MASK_COLOR: u32 = 0xFF_FF_FF;
@@ -45,22 +43,30 @@ fn main() {
                 let width = window.inner_size().width as usize;
                 let height = window.inner_size().height as usize;
 
-                // Clear the buffer first
-                buffer.fill(BACKGROUND_COLOR);
+                // Redraw the rotation every 5 steps
+                if rotation % 15.0 == 0.0 {
+                    // Clear the buffer first
+                    buffer.fill(BACKGROUND_COLOR);
 
-                // Redraw the whole buffer if it resized
-                if buffer.len() != width * height {
-                    log::info!("Buffer resized to {width}x{height}, redrawing");
+                    // Redraw the whole buffer if it resized
+                    if buffer.len() != width * height {
+                        log::info!("Buffer resized to {width}x{height}, redrawing");
 
-                    // Resize the buffer with empty values
-                    buffer.resize(width * height, BACKGROUND_COLOR);
+                        // Resize the buffer with empty values
+                        buffer.resize(width * height, BACKGROUND_COLOR);
+                    }
+
+                    let now = SystemTime::now();
+
+                    // Rotate the sprite
+                    let rotated_blit_buffer =
+                        img.rotsprite((rotation / 15.0).round() * 15.0).unwrap();
+
+                    log::info!("Rotated sprite in {}ms", now.elapsed().unwrap().as_millis());
+
+                    // Draw the rotated sprite
+                    rotated_blit_buffer.blit(&mut buffer, width, (0, 0));
                 }
-
-                // Rotate the sprite
-                let rotated_blit_buffer = img.rotsprite((rotation / 15.0).round() * 15.0).unwrap();
-
-                // Draw the rotated sprite
-                rotated_blit_buffer.blit(&mut buffer, width, (0, 0));
 
                 rotation += 0.5;
 
