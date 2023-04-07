@@ -3,6 +3,8 @@
 //! This library allows you to rotate pixel art using the [rotsprite](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite) algorithm.
 
 // Make the modules public for benchmarks but don't document it
+#[cfg(feature = "blit")]
+mod blit;
 #[doc(hidden)]
 pub mod rotate;
 #[doc(hidden)]
@@ -17,16 +19,30 @@ pub enum Error {
     ImageSizeMismatch,
 }
 
+/// Expose `rotsprite` method on some image types.
+pub trait Rotsprite<P>
+where
+    P: Clone + Eq,
+{
+    /// Clone and rotate a sprite.
+    ///
+    /// Rotation is in degrees (0-360).
+    /// The size of the resulting vector will be bigger if the rotation isn't exactly 0.0, 90.0, 180.0 or 270.0 degrees.
+    /// The width and the height will be swapped at angles of 90.0 and 270.0.
+    fn rotsprite(&self, rotation: f64) -> Result<Self, Error>
+    where
+        Self: Sized;
+}
+
 /// Rotate a sprite based on any pixel format implementing the `Eq` and `Clone` traits.
 ///
 /// Rotation is in degrees (0-360).
 /// The size of the resulting vector will be bigger if the rotation isn't exactly 0.0, 90.0, 180.0 or 270.0 degrees.
 /// The width and the height will be swapped at angles of 90.0 and 270.0.
-#[multiversion::multiversion]
-#[clone(target = "[x86|x86_64]+sse3")]
-#[clone(target = "[x86|x86_64]+sse3+avx")]
-#[clone(target = "[x86|x86_64]+sse3+avx2")]
-#[static_dispatch(fn = "rotate")]
+#[multiversion::multiversion(
+    targets("x86_64+sse3", "x86_64+sse3+avx", "x86_64+sse3+avx2"),
+    dispatcher = "static"
+)]
 pub fn rotsprite<P>(
     buf: &[P],
     empty_color: &P,

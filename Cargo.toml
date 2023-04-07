@@ -11,16 +11,31 @@ description = "Rotate sprites using the rotsprite algorithm"
 keywords = ["game", "sprite", "blit", "rotation"]
 categories = ["rendering", "game-engines"]
 
+[features]
+default = ["blit"]
+blit = ["dep:blit"]
+
 [dependencies]
-multiversion = "0.5.0"
-thiserror = "1.0.15"
+multiversion = "0.7.1"
+thiserror = "1.0.40"
+blit = { version = "0.7.1", optional = true, default-features = false }
 
 [dev-dependencies]
-blit = "0.5.12"
-image = "0.23.3"
-minifb = "0.16.0"
-criterion = "0.3.1"
-rand = "0.7.3"
+softbuffer = "0.2.0"
+winit = "0.28.3"
+log = "0.4.17"
+web-time = "0.2.0"
+rand = "0.8.5"
+blit = "0.7.1"
+image = { version = "0.24.6", default-features = false, features = ["png"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+criterion = "0.4.0"
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+web-sys = { version = "0.3.61", features = ["CanvasRenderingContext2d", "Document", "Element", "HtmlCanvasElement", "ImageData", "Window"] }
+wasm-bindgen = "0.2.84"
+console_log = { version = "1.0.0", features = ["wasm-bindgen", "color"] }
 
 [[bench]]
 name = "rotsprite"
