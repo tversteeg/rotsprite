@@ -3,7 +3,7 @@ name = "rotsprite"
 version = "0.1.4"
 authors = ["Thomas Versteeg <thomasversteeg@gmx.com>"]
 license = "AGPL-3.0-or-later"
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 repository = "https://github.com/tversteeg/rotsprite"
 documentation = "https://docs.rs/rotsprite"
@@ -18,24 +18,27 @@ blit = ["dep:blit"]
 [dependencies]
 multiversion = "0.7.1"
 thiserror = "1.0.40"
-blit = { version = "0.7.1", optional = true, default-features = false }
+blit = { version = "0.8.0", optional = true, default-features = false }
 
 [dev-dependencies]
-softbuffer = "0.2.0"
 winit = "0.28.3"
 log = "0.4.17"
 web-time = "0.2.0"
-rand = "0.8.5"
-blit = "0.7.1"
+blit = "0.8.0"
 image = { version = "0.24.6", default-features = false, features = ["png"] }
+pixels = "0.12.1"
+bytemuck = "1.13.1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 criterion = "0.4.0"
+pollster = "0.3.0"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 web-sys = { version = "0.3.61", features = ["CanvasRenderingContext2d", "Document", "Element", "HtmlCanvasElement", "ImageData", "Window"] }
 wasm-bindgen = "0.2.84"
+wasm-bindgen-futures = "0.4.34"
 console_log = { version = "1.0.0", features = ["wasm-bindgen", "color"] }
+console_error_panic_hook = "0.1.7"
 
 [[example]]
 name = "window"

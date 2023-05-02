@@ -1,36 +1,64 @@
-use blit::BlitExt;
+use blit::{prelude::Size, Blit, BlitOptions, ToBlitBuffer};
+use pixels::{PixelsBuilder, SurfaceTexture};
 use rotsprite::Rotsprite;
-use softbuffer::GraphicsContext;
 use web_time::SystemTime;
 use winit::{
+    dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
 
-const BACKGROUND_COLOR: u32 = 0xFF_CC_FF;
 const MASK_COLOR: u32 = 0xFF_FF_FF;
 
-fn main() {
+// Window settings
+const DST_SIZE: Size = Size {
+    width: 200,
+    height: 200,
+};
+
+async fn run() {
     // Load the image from disk
     let img = image::load_from_memory(include_bytes!("./threeforms.png"))
         .unwrap()
-        .into_rgb8()
+        .to_rgb8()
         .to_blit_buffer_with_mask_color(MASK_COLOR);
     log::info!("Loaded RGBA image with size {:?}", img.size());
 
     // Setup a winit window
+    let size = LogicalSize::new(
+        DST_SIZE.width as f64 * 2.0 + 10.0,
+        DST_SIZE.height as f64 * 2.0 + 10.0,
+    );
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let mut window_builder = WindowBuilder::new()
+        .with_title("Rotsprite")
+        .with_inner_size(size);
 
     // Setup the WASM canvas if running on the browser
     #[cfg(target_arch = "wasm32")]
-    wasm::setup_canvas(&window);
+    {
+        use winit::platform::web::WindowBuilderExtWebSys;
 
-    let mut graphics_context = unsafe { GraphicsContext::new(&window, &window) }.unwrap();
+        window_builder = window_builder.with_canvas(Some(wasm::setup_canvas()));
+    }
 
-    // The pixel buffer to fill
-    let mut buffer: Vec<u32> = Vec::new();
+    let window = window_builder.build(&event_loop).unwrap();
+
+    let mut pixels = {
+        let surface_texture =
+            SurfaceTexture::new(DST_SIZE.width * 2 + 10, DST_SIZE.height * 2 + 10, &window);
+        PixelsBuilder::new(DST_SIZE.width, DST_SIZE.height, surface_texture)
+            .clear_color(pixels::wgpu::Color {
+                r: 0.3,
+                g: 0.1,
+                b: 0.3,
+                a: 1.0,
+            })
+            .build_async()
+            .await
+    }
+    .unwrap();
 
     // Rotate a tiny bit every frame
     let mut rotation = 0.0f64;
@@ -40,37 +68,34 @@ fn main() {
 
         match event {
             Event::RedrawRequested(window_id) if window_id == window.id() => {
-                let width = window.inner_size().width as usize;
-                let height = window.inner_size().height as usize;
+                let mut buffer = bytemuck::cast_slice_mut(pixels.frame_mut());
+                buffer.fill(0);
 
-                // Redraw the rotation every 5 steps
-                if rotation % 15.0 == 0.0 {
-                    // Clear the buffer first
-                    buffer.fill(BACKGROUND_COLOR);
+                let now = SystemTime::now();
 
-                    // Redraw the whole buffer if it resized
-                    if buffer.len() != width * height {
-                        log::info!("Buffer resized to {width}x{height}, redrawing");
+                // Rotate the sprite
+                let rotated_blit_buffer = img.rotsprite((rotation / 15.0).round() * 15.0).unwrap();
 
-                        // Resize the buffer with empty values
-                        buffer.resize(width * height, BACKGROUND_COLOR);
-                    }
+                log::info!("Rotated sprite in {}ms", now.elapsed().unwrap().as_millis());
 
-                    let now = SystemTime::now();
-
-                    // Rotate the sprite
-                    let rotated_blit_buffer =
-                        img.rotsprite((rotation / 15.0).round() * 15.0).unwrap();
-
-                    log::info!("Rotated sprite in {}ms", now.elapsed().unwrap().as_millis());
-
-                    // Draw the rotated sprite
-                    rotated_blit_buffer.blit(&mut buffer, width, (0, 0));
-                }
+                // Draw the rotated sprite
+                rotated_blit_buffer.blit(&mut buffer, DST_SIZE, &BlitOptions::new());
 
                 rotation += 0.5;
 
-                graphics_context.set_buffer(&buffer, width as u16, height as u16);
+                // Blit draws the pixels in RGBA format, but the pixels crate expects BGRA, so convert it
+                pixels.frame_mut().chunks_exact_mut(4).for_each(|color| {
+                    let (r, g, b, a) = (color[0], color[1], color[2], color[3]);
+
+                    color[0] = b;
+                    color[1] = g;
+                    color[2] = r;
+                    color[3] = a;
+                });
+
+                if let Err(err) = pixels.render() {
+                    log::error!("Pixels error:\n{err}");
+                }
             }
             Event::MainEventsCleared => {
                 // Animate the next frame
@@ -87,37 +112,49 @@ fn main() {
     });
 }
 
+fn main() {
+    #[cfg(target_arch = "wasm32")]
+    {
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+        console_log::init_with_level(log::Level::Info).expect("error initializing logger");
+
+        wasm_bindgen_futures::spawn_local(run());
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        pollster::block_on(run());
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
 mod wasm {
-    use wasm_bindgen::prelude::*;
-    use winit::{platform::web::WindowExtWebSys, window::Window};
-
-    /// Run main on the browser.
-    #[wasm_bindgen(start)]
-    pub fn run() {
-        console_log::init_with_level(log::Level::Debug).expect("error initializing logger");
-
-        super::main();
-    }
+    use wasm_bindgen::JsCast;
+    use web_sys::HtmlCanvasElement;
 
     /// Attach the winit window to a canvas.
-    pub fn setup_canvas(window: &Window) {
+    pub fn setup_canvas() -> HtmlCanvasElement {
         log::debug!("Binding window to HTML canvas");
 
-        let canvas = window.canvas();
-
         let window = web_sys::window().unwrap();
+
         let document = window.document().unwrap();
         let body = document.body().unwrap();
         body.style().set_css_text("text-align: center");
 
+        let canvas = document
+            .create_element("canvas")
+            .unwrap()
+            .dyn_into::<HtmlCanvasElement>()
+            .unwrap();
+
+        canvas.set_id("canvas");
         body.append_child(&canvas).unwrap();
         canvas.style().set_css_text("display:block; margin: auto");
-        canvas.set_width(600);
-        canvas.set_height(400);
 
         let header = document.create_element("h2").unwrap();
-        header.set_text_content(Some("Rotsprite Example"));
+        header.set_text_content(Some("Rotsprite"));
         body.append_child(&header).unwrap();
+
+        canvas
     }
 }
