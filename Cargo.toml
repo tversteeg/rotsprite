@@ -22,7 +22,7 @@ blit = { version = "0.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
 winit = "0.28.6"
-log = "0.4.17"
+log = "0.4.18"
 web-time = "0.2.0"
 blit = "0.8.1"
 image = { version = "0.24.6", default-features = false, features = ["png"] }
