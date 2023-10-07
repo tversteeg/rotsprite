@@ -23,7 +23,7 @@ blit = { version = "0.8.3", optional = true, default-features = false }
 [dev-dependencies]
 winit = "0.28.7"
 log = "0.4.20"
-web-time = "0.2.0"
+web-time = "0.2.1"
 blit = "0.8.3"
 image = { version = "0.24.7", default-features = false, features = ["png"] }
 pixels = "0.13.0"
