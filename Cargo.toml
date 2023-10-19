@@ -17,7 +17,7 @@ blit = ["dep:blit"]
 
 [dependencies]
 multiversion = "0.7.3"
-thiserror = "1.0.49"
+thiserror = "1.0.50"
 blit = { version = "0.8.4", optional = true, default-features = false }
 
 [dev-dependencies]
