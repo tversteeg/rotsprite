@@ -25,7 +25,7 @@ winit = "0.28.7"
 log = "0.4.20"
 web-time = "0.2.4"
 blit = "0.8.4"
-image = { version = "0.24.7", default-features = false, features = ["png"] }
+image = { version = "0.24.8", default-features = false, features = ["png"] }
 pixels = "0.13.0"
 bytemuck = "1.14.0"
 
