@@ -18,13 +18,13 @@ blit = ["dep:blit"]
 [dependencies]
 multiversion = "0.7.3"
 thiserror = "1.0.57"
-blit = { version = "0.8.4", optional = true, default-features = false }
+blit = { version = "0.8.5", optional = true, default-features = false }
 
 [dev-dependencies]
 winit = "0.28.7"
 log = "0.4.21"
 web-time = "1.1.0"
-blit = "0.8.4"
+blit = "0.8.5"
 image = { version = "0.24.9", default-features = false, features = ["png"] }
 pixels = "0.13.0"
 bytemuck = "1.14.3"
