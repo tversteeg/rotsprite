@@ -1,6 +1,12 @@
 //! Pixel Art rotation algorithms that works with many types of pixel buffers.
 //!
 //! This library allows you to rotate pixel art using the [rotsprite](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite) algorithm.
+//!
+//! # Feature Flags
+//!
+//! ## `blit`
+//!
+//! Implement the [`crate::RotSprite`] trait for [`blit::BlitBuffer`], making it easy to get a rotated copy of a blit buffer.
 
 // Make the modules public for benchmarks but don't document it
 #[cfg(feature = "blit")]
