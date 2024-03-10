@@ -25,9 +25,9 @@ This library allows you to rotate pixel art using the [rotsprite](https://en.wik
 
 ## Demos
 
-### [WASM Demo](https://tversteeg.nl/rotsprite/window/)
+### [WASM Demo](https://tversteeg.nl/rotsprite)
 
-Web: https://tversteeg.nl/rotsprite/window
+Web: https://tversteeg.nl/rotsprite
 
 Uses the `["blit"]` feature flag.
 
