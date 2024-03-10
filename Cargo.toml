@@ -21,7 +21,7 @@ thiserror = "1.0.57"
 blit = { version = "0.8.5", optional = true, default-features = false }
 
 [dev-dependencies]
-winit = "0.28.7"
+winit = "0.29.14"
 log = "0.4.21"
 web-time = "1.1.0"
 blit = "0.8.5"
