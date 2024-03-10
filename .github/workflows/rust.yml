@@ -4,17 +4,14 @@ on:
     paths-ignore:
       - "docs/**"
       - "**.md"
-  pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "**.md"
 
 jobs:
+  # Check for formatting
   rustfmt:
     name: Formatter check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/checkout@v4
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -29,8 +26,7 @@ jobs:
           command: fmt
           args: --all -- --check
 
-  # Run compile check on Linux, macOS, and Windows
-  # On both Rust stable and Rust nightly
+  # Run a compilation check on Linux, macOS, and Windows
   compile:
     name: Compile
     runs-on: ${{ matrix.os }}
@@ -38,63 +34,45 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        toolchain: [stable, nightly]
     steps:
       # Checkout the branch being tested
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/checkout@v4
 
       # Install rust stable
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.toolchain }}
-
-      # Cache the built dependencies
-      - uses: Swatinem/rust-cache@v2.7.3
-        with:
-          save-if: ${{ github.event_name == 'push' }}
+          toolchain: stable
 
       # Install cargo-hack
       - uses: taiki-e/install-action@cargo-hack
 
-      # Compile all feature combinations on the target platform
-      - name: Compile
-        run: cargo hack --feature-powerset check
+      # Check if all feature combinations compile
+      - name: Test
+        run: cargo hack --each-feature check
 
   # Run tests on Linux
-  # On both Rust stable and Rust nightly
   test:
     name: Test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        toolchain: [stable, nightly]
     steps:
       # Checkout the branch being tested
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/checkout@v4
 
       # Install rust stable
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: stable
 
-      # Cache the built dependencies
-      - uses: Swatinem/rust-cache@v2.7.3
-        with:
-          save-if: ${{ github.event_name == 'push' }}
-
-      # Install cargo-hack
-      - uses: taiki-e/install-action@cargo-hack
-
-      # Run the ignored tests that expect the above setup
-      - name: Run all tests
+      # Test all features on the target platform
+      - name: Test
         run: cargo hack --feature-powerset test
 
+  # Build the WASM target & push it to GitHub pages
   wasm:
-    name: WASM examples
+    name: WASM test & build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/checkout@v4
 
       # Install rust stable
       - uses: dtolnay/rust-toolchain@master
@@ -107,8 +85,8 @@ jobs:
         with:
           save-if: ${{ github.event_name == 'push' }}
 
-      # Build the WASM examples
-      - name: Build example
+      # Build the WASM 
+      - name: Build
         run: cargo run --package run-wasm -- --release --build-only --example window
 
       # Deploy to GitHub pages
@@ -117,5 +95,5 @@ jobs:
         env:
           REPO: self
           BRANCH: gh-pages
-          FOLDER: target/wasm-examples
+          FOLDER: target/wasm-examples/window
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

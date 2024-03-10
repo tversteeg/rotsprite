@@ -1,14 +1,15 @@
 # rotsprite
 
-Rust implementation/library of the RotSprite algorithm.
+[![Build Status](https://github.com/tversteeg/rotsprite/workflows/CI/badge.svg)](https://github.com/tversteeg/rotsprite/actions?workflow=CI)
+[![Crates.io](https://img.shields.io/crates/v/rotsprite.svg)](https://crates.io/crates/rotsprite)
+[![Documentation](https://docs.rs/rotsprite/badge.svg)](https://docs.rs/rotsprite)
+[![License: AGPL-3.0-or-later](https://img.shields.io/crates/l/rotsprite.svg)](#license)
+[![Downloads](https://img.shields.io/crates/d/rotsprite.svg)](#downloads)
 
-![CI](https://github.com/tversteeg/rotsprite/workflows/CI/badge.svg?branch=master)
-<a href="https://crates.io/crates/rotsprite"><img src="https://img.shields.io/crates/v/rotsprite.svg" alt="Version"/></a>
-<a href="https://docs.rs/rotsprite"><img src="https://img.shields.io/badge/api-rustdoc-blue.svg" alt="Rust Documentation"/></a>
-<img src="https://img.shields.io/crates/l/rotsprite.svg" alt="License"/>
+### [Documentation](https://docs.rs/rotsprite/)
 
-Works with many types of pixel buffers.
-
+<!-- cargo-rdme start -->
+<!-- cargo-rdme end -->
 
 ![Large](docs/example-large.png?raw=true)
 ![Small](docs/example-small.png?raw=true)
@@ -16,8 +17,6 @@ Works with many types of pixel buffers.
 | Left Picture | Middle Picture | Right Picture|
 |-|-|-|
 | Source Image | Rotated 30° using RotSprite | Rotated 30° using naive rotation |
-
-## Example
 
 ## Demos
 
@@ -33,7 +32,7 @@ Uses the `["blit"]` feature flag.
 cargo run --example window
 ```
 
-## Credits
+#### Credits
 
 [RotSprite algorithm - Xenowhirl](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite)<br/>
 [Pixel Art - Redshrike](https://opengameart.org/content/3-form-rpg-boss-harlequin-epicycle)
