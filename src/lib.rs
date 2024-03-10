@@ -1,4 +1,4 @@
-//! # Pixel Art Rotation
+//! Pixel Art rotation algorithms that works with many types of pixel buffers.
 //!
 //! This library allows you to rotate pixel art using the [rotsprite](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite) algorithm.
 
