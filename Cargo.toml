@@ -16,7 +16,7 @@ default = ["blit"]
 blit = ["dep:blit"]
 
 [dependencies]
-multiversion = "0.7.3"
+multiversion = "0.7.4"
 thiserror = "1.0.58"
 
 # `blit` feature
