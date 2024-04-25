@@ -21,11 +21,11 @@ thiserror = "1.0.59"
 
 # `blit` feature
 blit = { version = "0.8.5", optional = true, default-features = false }
-pixel-game-lib = { version = "0.8.0", default-features = false }
+pixel-game-lib = { version = "0.8.1", default-features = false }
 
 [dev-dependencies]
 image = { version = "0.24.9", default-features = false, features = ["png"] }
-pixel-game-lib = "0.8.0"
+pixel-game-lib = "0.8.1"
 
 [[example]]
 name = "window"
