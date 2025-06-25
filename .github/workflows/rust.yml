@@ -84,7 +84,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       # Cache the built dependencies
-      - uses: Swatinem/rust-cache@v2.7.8
+      - uses: Swatinem/rust-cache@v2.8.0
         with:
           save-if: ${{ github.event_name == 'push' }}
 
